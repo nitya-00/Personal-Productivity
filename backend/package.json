@@ -4,24 +4,30 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "db:generate": "./node_modules/.bin/prisma generate --config ../prisma.config.ts",
+    "db:migrate": "./node_modules/.bin/prisma migrate dev --config ../prisma.config.ts",
+    "db:seed": "tsx ../prisma/seed.ts",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc -p tsconfig.json",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "tsx --test src/*.test.ts src/**/*.test.ts"
   },
   "dependencies": {
-    "@prisma/client": "latest",
+    "@prisma/client": "7.10.0",
+    "@prisma/adapter-pg": "7.10.0",
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",
+    "pg": "latest",
     "zod": "latest"
   },
   "devDependencies": {
     "@types/cors": "latest",
     "@types/express": "latest",
     "@types/node": "latest",
-    "prisma": "latest",
+    "@types/pg": "latest",
+    "prisma": "7.10.0",
     "supertest": "latest",
     "tsx": "latest",
     "typescript": "latest"
