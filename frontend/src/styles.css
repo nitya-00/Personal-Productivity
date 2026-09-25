@@ -1,6 +1,29 @@
 @import "tailwindcss";
 
-:root { font-family: Inter, system-ui, sans-serif; color: #172033; background: #f7f8fa; }
+:root { font-family: ui-sans-serif, system-ui, sans-serif; color: #16252a; background: #edf2ef; }
+* { box-sizing: border-box; }
 body { margin: 0; }
-main { max-width: 42rem; margin: 5rem auto; padding: 2rem; }
-h1 { margin-bottom: 0.5rem; }
+button, input, select { font: inherit; }
+.app-shell { max-width: 92rem; margin: 0 auto; padding: 2.5rem clamp(1rem, 4vw, 4rem) 4rem; }
+.masthead { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
+.eyebrow { margin: 0 0 .4rem; font-size: .75rem; font-weight: 800; letter-spacing: .16em; color: #426c60; }
+h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.25rem, 5vw, 4.25rem); line-height: .95; letter-spacing: -.045em; }
+.quiet { max-width: 20rem; margin: 0; color: #5d6b6d; font-size: .95rem; line-height: 1.45; }
+.date-bar { display: flex; align-items: center; gap: .55rem; margin-bottom: 1.2rem; }
+.date-bar button, .save-button { border: 1px solid #b6c5bd; border-radius: .45rem; background: #fff; color: #1d3435; padding: .5rem .7rem; cursor: pointer; font-size: .9rem; font-weight: 650; }
+.date-bar button:hover, .save-button:hover:not(:disabled) { border-color: #426c60; background: #e6f0e9; }
+.date-bar input { border: 1px solid #b6c5bd; border-radius: .45rem; padding: .47rem .55rem; background: #fff; color: #1d3435; }
+.notice { margin: 0 0 1rem; padding: .75rem 1rem; border-left: 3px solid #426c60; background: #dfece4; color: #29463e; font-size: .92rem; }
+.table-frame { overflow-x: auto; border: 1px solid #cad5cf; border-radius: .75rem; background: #fff; box-shadow: 0 1.25rem 3rem rgba(24, 48, 43, .08); }
+table { width: 100%; min-width: 56rem; border-collapse: collapse; }
+th, td { border-bottom: 1px solid #e4ebe7; padding: .55rem .65rem; text-align: left; vertical-align: middle; }
+thead th { position: sticky; top: 0; background: #f3f7f4; color: #536761; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; }
+tbody th { width: 8rem; color: #40534e; font-size: .9rem; font-weight: 650; white-space: nowrap; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+td input, td select { width: 100%; min-width: 8rem; border: 1px solid transparent; border-radius: .35rem; padding: .45rem .5rem; background: transparent; color: #20353a; outline: none; }
+td input:focus, td select:focus { border-color: #719e8d; background: #f4faf6; box-shadow: 0 0 0 3px rgba(113, 158, 141, .18); }
+td input::placeholder { color: #9aa8a4; }
+.save-button { padding: .42rem .6rem; font-size: .8rem; }
+.save-button:disabled { cursor: wait; opacity: .55; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+@media (max-width: 42rem) { .app-shell { padding-top: 1.5rem; } .masthead { align-items: start; flex-direction: column; gap: .8rem; } .date-bar { flex-wrap: wrap; } .quiet { max-width: none; } }
