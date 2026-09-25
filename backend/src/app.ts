@@ -6,6 +6,7 @@ import goalsRouter from './routes/goals.js'
 import challengeRouter from './routes/challenge.js'
 import checkinsRouter from './routes/checkins.js'
 import remindersRouter from './routes/reminders.js'
+import phoneFreeRouter from './routes/phoneFree.js'
 
 const app = express()
 
@@ -22,6 +23,7 @@ app.use('/api', goalsRouter)
 app.use('/api', challengeRouter)
 app.use('/api', checkinsRouter)
 app.use('/api', remindersRouter)
+app.use('/api', phoneFreeRouter)
 
 app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
   console.error(error)

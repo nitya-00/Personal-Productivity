@@ -1,0 +1,8 @@
+import { Router } from 'express'
+import { GoalType } from '../generated/prisma/client.js'
+import { getLocalProfile } from '../lib/localProfile.js'
+import { prisma } from '../lib/prisma.js'
+const router=Router();const valid=(value:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+router.get('/phone-free',async(_q,res,next)=>{try{const u=await getLocalProfile();const goal=await prisma.goal.findFirst({where:{userId:u.id,type:GoalType.SLEEP,isActive:true}});const target=goal?.targetValue??'22:00';const hour=(Number(target.slice(0,2))+23)%24;const end=new Date();end.setUTCHours(0,0,0,0);const start=new Date(end);start.setUTCDate(start.getUTCDate()-6);const logs=await prisma.dailyLog.findMany({where:{userId:u.id,date:{gte:start,lte:end}},include:{hourlyBlocks:{include:{category:true}}}});const checked=logs.map(log=>{const b=log.hourlyBlocks.find(x=>x.hourIndex===hour);return Boolean(b?.categoryId)&&b?.category?.group!=='PHONE'}).filter(Boolean).length;res.json({sleepTarget:target,finalHourStart:`${String(hour).padStart(2,'0')}:00`,completedDays:checked,loggedDays:logs.filter(l=>l.hourlyBlocks.some(b=>b.hourIndex===hour&&b.categoryId)).length})}catch(e){next(e)}})
+router.put('/phone-free',async(req,res,next)=>{try{const target=String(req.body.sleepTarget??'');if(!valid(target))return res.status(400).json({message:'Choose a valid sleep time.'});const u=await getLocalProfile();const existing=await prisma.goal.findFirst({where:{userId:u.id,type:GoalType.SLEEP}});await (existing?prisma.goal.update({where:{id:existing.id},data:{targetValue:target,isActive:true}}):prisma.goal.create({data:{userId:u.id,type:GoalType.SLEEP,title:'Sleep target',targetValue:target}}));res.json({sleepTarget:target})}catch(e){next(e)}})
+export default router
