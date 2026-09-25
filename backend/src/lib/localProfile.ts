@@ -1,11 +1,6 @@
 import { prisma } from './prisma.js'
-
-const LOCAL_PROFILE_EMAIL = 'local@timelens.local'
+import { requireUserId } from './authContext.js'
 
 export function getLocalProfile() {
-  return prisma.user.upsert({
-    where: { email: LOCAL_PROFILE_EMAIL },
-    update: {},
-    create: { email: LOCAL_PROFILE_EMAIL, displayName: 'My profile' },
-  })
+  return prisma.user.findUniqueOrThrow({ where: { id: requireUserId() } })
 }
