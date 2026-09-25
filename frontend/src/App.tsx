@@ -4,6 +4,7 @@ import Dashboard from './Dashboard'
 import Analytics from './Analytics'
 import Goals from './Goals'
 import Challenge from './Challenge'
+import Checkins from './Checkins'
 
 type Category = { id: string; name: string }
 type Distraction = 'NONE' | 'PHONE' | 'YOUTUBE' | 'FRIENDS' | 'UNEXPECTED_WORK' | 'TIRED' | 'OTHER'
@@ -134,5 +135,5 @@ function DailyLogPage() {
 }
 
 export default function App() {
-  return <><nav className="main-nav" aria-label="Main navigation"><NavLink to="/">Daily log</NavLink><NavLink to="/dashboard">Dashboard</NavLink><NavLink to="/analytics">Analytics</NavLink><NavLink to="/goals">Goals</NavLink><NavLink to="/challenge">100 Days</NavLink></nav><Routes><Route path="/" element={<DailyLogPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/analytics" element={<Analytics />} /><Route path="/goals" element={<Goals />} /><Route path="/challenge" element={<Challenge />} /></Routes></>
+  return <><nav className="main-nav" aria-label="Main navigation"><NavLink to="/">Daily log</NavLink><NavLink to="/dashboard">Dashboard</NavLink><NavLink to="/analytics">Analytics</NavLink><NavLink to="/goals">Goals</NavLink><NavLink to="/challenge">100 Days</NavLink><NavLink to="/checkins">Check-ins</NavLink></nav><Routes><Route path="/" element={<DailyLogPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/analytics" element={<Analytics />} /><Route path="/goals" element={<Goals />} /><Route path="/challenge" element={<Challenge />} /><Route path="/checkins" element={<Checkins />} /></Routes></>
 }
