@@ -57,3 +57,12 @@ test('dashboard endpoint returns real summaries with cautious empty-data guidanc
     await prisma.dailyLog.deleteMany({ where: { userId: profile.id, date: new Date(`${date}T00:00:00.000Z`) } })
   }
 })
+
+test('period analytics endpoint returns comparison and pattern structures', async () => {
+  const response = await request(app).get('/api/analytics/7')
+  assert.equal(response.status, 200)
+  assert.equal(response.body.days, 7)
+  assert.equal(response.body.categories.length, 5)
+  assert.equal(response.body.hourly.length, 24)
+  assert.deepEqual(Object.keys(response.body.planned), ['total', 'completed', 'diverted', 'completionPercentage'])
+})
