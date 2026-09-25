@@ -66,3 +66,15 @@ test('period analytics endpoint returns comparison and pattern structures', asyn
   assert.equal(response.body.hourly.length, 24)
   assert.deepEqual(Object.keys(response.body.planned), ['total', 'completed', 'diverted', 'completionPercentage'])
 })
+
+test('goals endpoint creates and updates a simple goal', async () => {
+  let goalId: string | undefined
+  try {
+    const created = await request(app).post('/api/goals').send({ title: 'Finish API module', dueDate: '2099-01-02' })
+    assert.equal(created.status, 201)
+    goalId = created.body.id
+    const updated = await request(app).put(`/api/goals/${goalId}`).send({ progress: 40 })
+    assert.equal(updated.status, 200)
+    assert.equal(updated.body.progress, 40)
+  } finally { if (goalId) await prisma.goal.delete({ where: { id: goalId } }) }
+})
