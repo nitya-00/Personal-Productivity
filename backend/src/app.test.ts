@@ -40,3 +40,20 @@ test('daily-log endpoint returns 24 blocks and updates one selected block', asyn
     await prisma.dailyLog.deleteMany({ where: { userId: profile.id, date: new Date(`${date}T00:00:00.000Z`) } })
   }
 })
+
+test('dashboard endpoint returns real summaries with cautious empty-data guidance', async () => {
+  const date = '2099-01-01'
+
+  try {
+    const response = await request(app).get(`/api/analytics/dashboard?date=${date}`)
+    assert.equal(response.status, 200)
+    assert.equal(response.body.cards.length, 5)
+    assert.deepEqual(response.body.cards.map((card: { name: string }) => card.name), ['Work', 'Study', 'Phone / YouTube', 'Sleep', 'Health'])
+    assert.equal(response.body.studyBreakdown.length, 4)
+    assert.match(response.body.insight, /Not enough data yet/)
+    assert.deepEqual(response.body.challenge, { completedDays: 0, targetDays: 100, percentage: 0 })
+  } finally {
+    const profile = await getLocalProfile()
+    await prisma.dailyLog.deleteMany({ where: { userId: profile.id, date: new Date(`${date}T00:00:00.000Z`) } })
+  }
+})

@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 import dailyLogRouter from './routes/dailyLog.js'
+import analyticsRouter from './routes/analytics.js'
 
 const app = express()
 
@@ -12,6 +13,7 @@ app.get('/api/health', (_request, response) => {
 })
 
 app.use('/api', dailyLogRouter)
+app.use('/api', analyticsRouter)
 
 app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
   console.error(error)
