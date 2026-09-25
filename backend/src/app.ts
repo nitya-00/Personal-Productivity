@@ -3,6 +3,7 @@ import express from 'express'
 import dailyLogRouter from './routes/dailyLog.js'
 import analyticsRouter from './routes/analytics.js'
 import goalsRouter from './routes/goals.js'
+import challengeRouter from './routes/challenge.js'
 
 const app = express()
 
@@ -16,6 +17,7 @@ app.get('/api/health', (_request, response) => {
 app.use('/api', dailyLogRouter)
 app.use('/api', analyticsRouter)
 app.use('/api', goalsRouter)
+app.use('/api', challengeRouter)
 
 app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
   console.error(error)
