@@ -1,4 +1,4 @@
-import { CategoryGroup, PrismaClient } from '../backend/src/generated/prisma/client.js'
+import { CategoryGroup, PrismaClient } from '../src/generated/prisma/client.js'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { config } from 'dotenv'
 

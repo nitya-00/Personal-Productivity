@@ -5,3 +5,4 @@ backend/src/generated/
 .env.local
 *.log
 .DS_Store
+!.env.example
