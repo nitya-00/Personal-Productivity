@@ -15,7 +15,7 @@ import { AuthenticationError, sessionContext } from './lib/authContext.js'
 
 const app = express()
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173' }))
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173', credentials: true }))
 app.use(cookieParser())
 app.use(express.json())
 app.use(sessionContext)
