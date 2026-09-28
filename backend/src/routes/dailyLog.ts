@@ -6,6 +6,14 @@ import { prisma } from '../lib/prisma.js'
 import { getOrCreateDailyLog, updateHourlyBlock } from '../services/dailyLog.js'
 
 const router = Router()
+const trackerCategories = [
+  { name: 'Study', group: 'STUDY' },
+  { name: 'Work', group: 'WORK' },
+  { name: 'Sleep', group: 'SLEEP' },
+  { name: 'House', group: 'LIFE' },
+  { name: 'Other', group: 'OTHER' },
+  { name: 'Fun', group: 'LEISURE' },
+] as const
 
 const distractionValues = Object.values(DistractionType) as [DistractionType, ...DistractionType[]]
 const updateBlockSchema = z.object({
@@ -39,8 +47,14 @@ function toDailyLogResponse(log: Awaited<ReturnType<typeof getOrCreateDailyLog>>
 
 router.get('/categories', async (_request, response, next) => {
   try {
-    const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } })
-    response.json({ categories: categories.map((category) => ({ name: category.name, id: category.id })) })
+    await Promise.all(trackerCategories.map((category) => prisma.category.upsert({
+      where: { name: category.name }, update: { group: category.group }, create: category,
+    })))
+    const categories = await prisma.category.findMany({ where: { name: { in: trackerCategories.map((category) => category.name) } } })
+    response.json({ categories: trackerCategories.flatMap((expected) => {
+      const category = categories.find((item) => item.name === expected.name)
+      return category ? [{ name: category.name, id: category.id }] : []
+    }) })
   } catch (error) {
     next(error)
   }

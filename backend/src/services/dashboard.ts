@@ -6,9 +6,10 @@ import { getOrCreateDailyLog } from './dailyLog.js'
 const cardGroups: Array<[string, CategoryGroup[]]> = [
   ['Work', [CategoryGroup.WORK]],
   ['Study', [CategoryGroup.STUDY]],
-  ['Phone / YouTube', [CategoryGroup.PHONE]],
   ['Sleep', [CategoryGroup.SLEEP]],
-  ['Health', [CategoryGroup.HEALTH]],
+  ['House', [CategoryGroup.LIFE]],
+  ['Fun', [CategoryGroup.LEISURE]],
+  ['Other', [CategoryGroup.OTHER]],
 ]
 
 type BlockWithCategory = HourlyBlock & { category: { name: string; group: CategoryGroup } | null }
@@ -49,7 +50,7 @@ export async function getDashboard(date = new Date()) {
     const previousHours = hoursForGroups(yesterdayBlocks, groups)
     return { name, hours, dayPercentage: Number(((hours / 24) * 100).toFixed(1)), changePercentage: change(hours, previousHours) }
   })
-  const studyBreakdown = ['DSA', 'ML', 'Project', 'College'].map((name) => ({
+  const studyBreakdown = ['Study', 'Work', 'Sleep', 'House', 'Fun', 'Other'].map((name) => ({
     name,
     hours: todayBlocks.filter((block) => block.category?.name === name).length,
   }))
@@ -67,18 +68,13 @@ export async function getDashboard(date = new Date()) {
   const weekly = cardGroups.map(([name, groups]) => ({ name, hours: hoursForGroups(thisWeekBlocks, groups), changePercentage: change(hoursForGroups(thisWeekBlocks, groups), hoursForGroups(previousWeekBlocks, groups)) }))
 
   const filledHours = todayBlocks.filter((block) => block.categoryId).length
-  const phone = cards.find((card) => card.name === 'Phone / YouTube')!
   const biggest = [...cards].sort((a, b) => b.hours - a.hours)[0]
   const insight = filledHours < 4
     ? 'Not enough data yet. Add a few completed hours to see a useful pattern.'
-    : phone.hours >= 3
-      ? `Phone and YouTube account for ${phone.dayPercentage}% of your day so far.`
-      : `${biggest.name} is your largest recorded category today at ${biggest.hours}h.`
+    : `${biggest.name} is your largest recorded category today at ${biggest.hours}h.`
   const recommendation = filledHours < 4
     ? 'Try logging the next few completed hours before reviewing the day.'
-    : phone.hours >= 3
-      ? 'Try keeping one upcoming hour phone-free and compare the result tomorrow.'
-      : 'Keep logging consistently to make tomorrow’s comparison more useful.'
+    : 'Keep logging consistently to make tomorrow’s comparison more useful.'
 
   const challenge = await prisma.challenge.findFirst({
     where: { userId: profile.id }, orderBy: { startDate: 'desc' }, include: { _count: { select: { days: true } } },

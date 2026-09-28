@@ -30,14 +30,14 @@ test('daily-log endpoint returns 24 blocks and updates one selected block', asyn
 
   try {
     const categories = await agent.get('/api/categories')
-    const dsa = categories.body.categories.find((category: { name: string }) => category.name === 'DSA')
+    const study = categories.body.categories.find((category: { name: string }) => category.name === 'Study')
     const log = await agent.get(`/api/daily-log/${date}`)
     assert.equal(log.status, 200)
     assert.equal(log.body.blocks.length, 24)
 
     const update = await agent
       .patch(`/api/daily-log/${date}/blocks/7`)
-      .send({ categoryId: dsa.id, activity: 'LeetCode', plannedTask: 'DSA practice', distraction: 'NONE' })
+      .send({ categoryId: study.id, activity: 'LeetCode', plannedTask: 'Study practice', distraction: 'NONE' })
     assert.equal(update.status, 200)
     assert.equal(update.body.activity, 'LeetCode')
 
@@ -55,9 +55,9 @@ test('dashboard endpoint returns real summaries with cautious empty-data guidanc
   try {
     const response = await agent.get(`/api/analytics/dashboard?date=${date}`)
     assert.equal(response.status, 200)
-    assert.equal(response.body.cards.length, 5)
-    assert.deepEqual(response.body.cards.map((card: { name: string }) => card.name), ['Work', 'Study', 'Phone / YouTube', 'Sleep', 'Health'])
-    assert.equal(response.body.studyBreakdown.length, 4)
+    assert.equal(response.body.cards.length, 6)
+    assert.deepEqual(response.body.cards.map((card: { name: string }) => card.name), ['Work', 'Study', 'Sleep', 'House', 'Fun', 'Other'])
+    assert.equal(response.body.studyBreakdown.length, 6)
     assert.match(response.body.insight, /Not enough data yet/)
     assert.deepEqual(response.body.challenge, { completedDays: 0, targetDays: 100, percentage: 0 })
   } finally {
@@ -69,7 +69,7 @@ test('period analytics endpoint returns comparison and pattern structures', asyn
   const response = await agent.get('/api/analytics/7')
   assert.equal(response.status, 200)
   assert.equal(response.body.days, 7)
-  assert.equal(response.body.categories.length, 5)
+  assert.equal(response.body.categories.length, 6)
   assert.equal(response.body.hourly.length, 24)
   assert.deepEqual(Object.keys(response.body.planned), ['total', 'completed', 'diverted', 'completionPercentage'])
 })
@@ -83,5 +83,8 @@ test('goals endpoint creates and updates a simple goal', async () => {
     const updated = await agent.put(`/api/goals/${goalId}`).send({ progress: 40 })
     assert.equal(updated.status, 200)
     assert.equal(updated.body.progress, 40)
+    const deleted = await agent.delete(`/api/goals/${goalId}`)
+    assert.equal(deleted.status, 204)
+    goalId = undefined
   } finally { if (goalId) await prisma.goal.delete({ where: { id: goalId } }) }
 })

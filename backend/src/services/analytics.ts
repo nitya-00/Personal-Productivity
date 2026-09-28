@@ -3,7 +3,7 @@ import { getLocalProfile } from '../lib/localProfile.js'
 import { prisma } from '../lib/prisma.js'
 
 const groups: Array<[string, CategoryGroup[]]> = [
-  ['Study', [CategoryGroup.STUDY]], ['Work', [CategoryGroup.WORK]], ['Phone / YouTube', [CategoryGroup.PHONE]], ['Sleep', [CategoryGroup.SLEEP]], ['Health', [CategoryGroup.HEALTH]],
+  ['Study', [CategoryGroup.STUDY]], ['Work', [CategoryGroup.WORK]], ['Sleep', [CategoryGroup.SLEEP]], ['House', [CategoryGroup.LIFE]], ['Fun', [CategoryGroup.LEISURE]], ['Other', [CategoryGroup.OTHER]],
 ]
 type Block = HourlyBlock & { category: { name: string; group: CategoryGroup } | null }
 
@@ -42,7 +42,7 @@ export async function getPeriodAnalytics(days: number, endDate = new Date()) {
     return actual.length > 0 && (plan.includes(actual) || actual.includes(plan))
   })
   const distractionCounts = Object.values(DistractionType).filter((value) => value !== DistractionType.NONE).map((type) => ({ name: type.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()), count: current.filter((block) => block.distraction === type).length })).filter((item) => item.count > 0)
-  const studyBreakdown = ['DSA', 'ML', 'Project', 'College'].map((name) => ({ name, hours: current.filter((block) => block.category?.name === name).length }))
+  const studyBreakdown = ['Study', 'Work', 'Sleep', 'House', 'Fun', 'Other'].map((name) => ({ name, hours: current.filter((block) => block.category?.name === name).length }))
 
   return { days, loggedHours: filled.length, totalSlots, categories, hourly, planned: { total: planned.length, completed: completed.length, diverted: planned.length - completed.length, completionPercentage: planned.length ? Number(((completed.length / planned.length) * 100).toFixed(1)) : null }, distractions: distractionCounts, studyBreakdown }
 }

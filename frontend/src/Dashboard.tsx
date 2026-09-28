@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiFetch } from './lib/api'
+import { apiFetch, localDateInput } from './lib/api'
 
 type Card = { name: string; hours: number; dayPercentage: number; changePercentage: number | null }
 type DashboardData = {
@@ -23,7 +23,7 @@ export default function Dashboard() {
   const [engine, setEngine] = useState<{level:string;insight:string;recommendation:string}|null>(null)
 
   useEffect(() => {
-    apiFetch('/api/analytics/dashboard')
+    apiFetch(`/api/analytics/dashboard?date=${localDateInput()}`)
       .then(async (response) => {
         if (!response.ok) throw new Error('Dashboard request failed')
         setData(await response.json() as DashboardData)
@@ -43,7 +43,7 @@ export default function Dashboard() {
       </article>)}
     </section>
     <section className="dashboard-columns">
-      <article className="panel"><p className="eyebrow">STUDY</p><h2>Today’s study split</h2><ul className="metric-list">{data.studyBreakdown.map((item) => <li key={item.name}><span>{item.name}</span><strong>{item.hours}h</strong></li>)}</ul></article>
+      <article className="panel"><p className="eyebrow">TODAY</p><h2>Your category mix</h2><ul className="metric-list">{data.studyBreakdown.map((item) => <li key={item.name}><span>{item.name}</span><strong>{item.hours}h</strong></li>)}</ul></article>
       <article className="panel"><p className="eyebrow">100 DAYS</p><h2>{data.challenge.completedDays} / {data.challenge.targetDays}</h2><div className="progress-track"><span style={{ width: `${data.challenge.percentage}%` }} /></div><p className="quiet">{data.challenge.percentage}% complete · {data.challenge.completedDays} recorded new experiences</p></article>
     </section>
     <section className="weekly-panel panel"><div><p className="eyebrow">THIS WEEK SO FAR</p><h2>Compared with the same number of days last week</h2></div><ul className="weekly-list">{data.weekly.map((item) => <li key={item.name}><span>{item.name}</span><strong>{item.hours}h</strong><small>{item.changePercentage === null ? 'No comparison yet' : `${item.changePercentage > 0 ? '+' : ''}${item.changePercentage}%`}</small></li>)}</ul></section>

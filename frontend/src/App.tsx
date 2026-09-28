@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
-import { apiFetch } from './lib/api'
+import { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { apiFetch, localDateInput } from './lib/api'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import Dashboard from './Dashboard'
 import Analytics from './Analytics'
 import Goals from './Goals'
 import Challenge from './Challenge'
 import Checkins from './Checkins'
-import Reminders from './Reminders'
 import PhoneFree from './PhoneFree'
 import Experiments from './Experiments'
 import Auth from './Auth'
@@ -29,14 +28,10 @@ const distractions: Array<[Distraction, string]> = [
   ['UNEXPECTED_WORK', 'Unexpected work'], ['TIRED', 'Tired'], ['OTHER', 'Other'],
 ]
 
-function dateToInput(date: Date) {
-  return date.toISOString().slice(0, 10)
-}
-
 function addDays(date: string, days: number) {
   const next = new Date(`${date}T12:00:00`)
   next.setDate(next.getDate() + days)
-  return dateToInput(next)
+  return localDateInput(next)
 }
 
 function hourLabel(hour: number) {
@@ -48,8 +43,23 @@ function hourLabel(hour: number) {
   return `${format(hour)} – ${format((hour + 1) % 24)}`
 }
 
+function ProfilePhoto() {
+  const [photo, setPhoto] = useState(() => localStorage.getItem('timelens-profile-photo') ?? '')
+  function choosePhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file || !file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = () => { const image = String(reader.result); localStorage.setItem('timelens-profile-photo', image); setPhoto(image) }
+    reader.readAsDataURL(file)
+  }
+  return <label className="profile-photo" title="Choose your photo">
+    {photo ? <img src={photo} alt="Your profile" /> : <span>✦</span>}
+    <input type="file" accept="image/*" onChange={choosePhoto} />
+  </label>
+}
+
 function DailyLogPage() {
-  const [date, setDate] = useState(dateToInput(new Date()))
+  const [date, setDate] = useState(localDateInput())
   const [log, setLog] = useState<DailyLog | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [savingHour, setSavingHour] = useState<number | null>(null)
@@ -115,7 +125,7 @@ function DailyLogPage() {
       <section className="date-bar" aria-label="Choose a day">
         <button onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">←</button>
         <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-        <button onClick={() => setDate(dateToInput(new Date()))}>Today</button>
+        <button onClick={() => setDate(localDateInput())}>Today</button>
         <button onClick={() => setDate(addDays(date, 1))} aria-label="Next day">→</button>
       </section>
 
@@ -140,5 +150,5 @@ function DailyLogPage() {
 }
 
 export default function App() {
-  return <><nav className="main-nav" aria-label="Main navigation"><NavLink to="/">Daily log</NavLink><NavLink to="/dashboard">Dashboard</NavLink><NavLink to="/analytics">Analytics</NavLink><NavLink to="/goals">Goals</NavLink><NavLink to="/challenge">100 Days</NavLink><NavLink to="/checkins">Check-ins</NavLink><NavLink to="/reminders">Reminders</NavLink><NavLink to="/phone-free">Phone-free</NavLink><NavLink to="/experiments">Experiments</NavLink><NavLink to="/auth">Sign in</NavLink></nav><Routes><Route path="/" element={<DailyLogPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/analytics" element={<Analytics />} /><Route path="/goals" element={<Goals />} /><Route path="/challenge" element={<Challenge />} /><Route path="/checkins" element={<Checkins />} /><Route path="/reminders" element={<Reminders />} /><Route path="/phone-free" element={<PhoneFree />} /><Route path="/experiments" element={<Experiments />} /><Route path="/auth" element={<Auth />} /></Routes></>
+  return <><nav className="main-nav" aria-label="Main navigation"><div className="nav-links"><NavLink to="/">Daily log</NavLink><NavLink to="/dashboard">Dashboard</NavLink><NavLink to="/analytics">Analytics</NavLink><NavLink to="/goals">Goals</NavLink><NavLink to="/challenge">100 Days</NavLink><NavLink to="/checkins">Check-ins</NavLink><NavLink to="/phone-free">Phone-free</NavLink><NavLink to="/experiments">Experiments</NavLink></div><div className="nav-profile"><ProfilePhoto /><NavLink to="/auth">Sign in</NavLink></div></nav><Routes><Route path="/" element={<DailyLogPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/analytics" element={<Analytics />} /><Route path="/goals" element={<Goals />} /><Route path="/challenge" element={<Challenge />} /><Route path="/checkins" element={<Checkins />} /><Route path="/phone-free" element={<PhoneFree />} /><Route path="/experiments" element={<Experiments />} /><Route path="/auth" element={<Auth />} /></Routes></>
 }
