@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './lib/api'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 type AnalyticsData = {
@@ -17,7 +18,7 @@ export default function Analytics() {
 
   useEffect(() => {
     setData(null); setError(false)
-    fetch(`/api/analytics/${days}`).then(async (response) => {
+    apiFetch(`/api/analytics/${days}`).then(async (response) => {
       if (!response.ok) throw new Error('Analytics request failed')
       setData(await response.json() as AnalyticsData)
     }).catch(() => setError(true))

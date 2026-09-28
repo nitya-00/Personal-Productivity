@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiFetch } from './lib/api'
 
 type Card = { name: string; hours: number; dayPercentage: number; changePercentage: number | null }
 type DashboardData = {
@@ -22,14 +23,14 @@ export default function Dashboard() {
   const [engine, setEngine] = useState<{level:string;insight:string;recommendation:string}|null>(null)
 
   useEffect(() => {
-    fetch('/api/analytics/dashboard')
+    apiFetch('/api/analytics/dashboard')
       .then(async (response) => {
         if (!response.ok) throw new Error('Dashboard request failed')
         setData(await response.json() as DashboardData)
       })
       .catch(() => setError(true))
   }, [])
-  useEffect(()=>{fetch('/api/insights').then(async r=>setEngine(await r.json() as {level:string;insight:string;recommendation:string})).catch(()=>undefined)},[])
+  useEffect(()=>{apiFetch('/api/insights').then(async r=>setEngine(await r.json() as {level:string;insight:string;recommendation:string})).catch(()=>undefined)},[])
 
   if (error) return <main className="dashboard-shell"><p className="notice">Unable to load your dashboard. Please refresh and try again.</p></main>
   if (!data) return <main className="dashboard-shell"><p className="quiet">Loading your day…</p></main>

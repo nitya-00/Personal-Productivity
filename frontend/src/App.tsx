@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { apiFetch } from './lib/api'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import Dashboard from './Dashboard'
 import Analytics from './Analytics'
@@ -58,8 +59,8 @@ function DailyLogPage() {
     setMessage('')
     try {
       const [logResponse, categoryResponse] = await Promise.all([
-        fetch(`/api/daily-log/${selectedDate}`),
-        fetch('/api/categories'),
+        apiFetch(`/api/daily-log/${selectedDate}`),
+        apiFetch('/api/categories'),
       ])
       if (!logResponse.ok || !categoryResponse.ok) throw new Error('Could not load the daily log.')
       setLog(await logResponse.json() as DailyLog)
@@ -82,7 +83,7 @@ function DailyLogPage() {
     setSavingHour(block.hourIndex)
     setMessage('')
     try {
-      const response = await fetch(`/api/daily-log/${date}/blocks/${block.hourIndex}`, {
+      const response = await apiFetch(`/api/daily-log/${date}/blocks/${block.hourIndex}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
