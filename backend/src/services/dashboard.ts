@@ -3,14 +3,7 @@ import { getLocalProfile } from '../lib/localProfile.js'
 import { prisma } from '../lib/prisma.js'
 import { getOrCreateDailyLog } from './dailyLog.js'
 
-const cardGroups: Array<[string, CategoryGroup[]]> = [
-  ['Work', [CategoryGroup.WORK]],
-  ['Study', [CategoryGroup.STUDY]],
-  ['Sleep', [CategoryGroup.SLEEP]],
-  ['House', [CategoryGroup.LIFE]],
-  ['Fun', [CategoryGroup.LEISURE]],
-  ['Other', [CategoryGroup.OTHER]],
-]
+const cardGroups = ['Work', 'Study', 'Sleep', 'House', 'Health', 'Personal', 'Fun', 'Other']
 
 type BlockWithCategory = HourlyBlock & { category: { name: string; group: CategoryGroup } | null }
 
@@ -24,8 +17,8 @@ function addDays(date: Date, days: number) {
   return next
 }
 
-function hoursForGroups(blocks: BlockWithCategory[], groups: CategoryGroup[]) {
-  return blocks.filter((block) => block.category && groups.includes(block.category.group)).length
+function hoursForGroups(blocks: BlockWithCategory[], categories: string[]) {
+  return blocks.filter((block) => block.category && categories.includes(block.category.name)).length
 }
 
 function change(current: number, previous: number) {
@@ -45,15 +38,15 @@ export async function getDashboard(date = new Date()) {
   const todayBlocks = (dayLogs.find((log) => log.date.getTime() === selectedDay.getTime())?.hourlyBlocks ?? []) as BlockWithCategory[]
   const yesterdayBlocks = (dayLogs.find((log) => log.date.getTime() === yesterday.getTime())?.hourlyBlocks ?? []) as BlockWithCategory[]
 
-  const cards = cardGroups.map(([name, groups]) => {
-    const hours = hoursForGroups(todayBlocks, groups)
-    const previousHours = hoursForGroups(yesterdayBlocks, groups)
+  const cards = cardGroups.map((name) => {
+    const hours = hoursForGroups(todayBlocks, [name])
+    const previousHours = hoursForGroups(yesterdayBlocks, [name])
     return { name, hours, dayPercentage: Number(((hours / 24) * 100).toFixed(1)), changePercentage: change(hours, previousHours) }
   })
-  const studyBreakdown = ['Study', 'Work', 'Sleep', 'House', 'Fun', 'Other'].map((name) => ({
+  const studyBreakdown = ['Study', 'Work', 'Sleep', 'House', 'Health', 'Personal', 'Fun', 'Other'].map((name) => ({
     name,
     hours: todayBlocks.filter((block) => block.category?.name === name).length,
-  }))
+  })).filter((item) => item.hours > 0)
 
   const mondayOffset = (selectedDay.getUTCDay() + 6) % 7
   const weekStart = addDays(selectedDay, -mondayOffset)
@@ -65,7 +58,7 @@ export async function getDashboard(date = new Date()) {
   })
   const thisWeekBlocks = weeklyLogs.filter((log) => log.date >= weekStart).flatMap((log) => log.hourlyBlocks) as BlockWithCategory[]
   const previousWeekBlocks = weeklyLogs.filter((log) => log.date >= previousStart && log.date < weekStart).flatMap((log) => log.hourlyBlocks) as BlockWithCategory[]
-  const weekly = cardGroups.map(([name, groups]) => ({ name, hours: hoursForGroups(thisWeekBlocks, groups), changePercentage: change(hoursForGroups(thisWeekBlocks, groups), hoursForGroups(previousWeekBlocks, groups)) }))
+  const weekly = cardGroups.map((name) => ({ name, hours: hoursForGroups(thisWeekBlocks, [name]), changePercentage: change(hoursForGroups(thisWeekBlocks, [name]), hoursForGroups(previousWeekBlocks, [name])) }))
 
   const filledHours = todayBlocks.filter((block) => block.categoryId).length
   const biggest = [...cards].sort((a, b) => b.hours - a.hours)[0]

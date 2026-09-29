@@ -11,6 +11,8 @@ const trackerCategories = [
   { name: 'Work', group: 'WORK' },
   { name: 'Sleep', group: 'SLEEP' },
   { name: 'House', group: 'LIFE' },
+  { name: 'Health', group: 'HEALTH' },
+  { name: 'Personal', group: 'LIFE' },
   { name: 'Other', group: 'OTHER' },
   { name: 'Fun', group: 'LEISURE' },
 ] as const

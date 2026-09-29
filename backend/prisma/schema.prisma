@@ -121,6 +121,7 @@ model CheckIn {
   energy    Int?
   focus     Int?
   mood      Int?
+  note      String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -159,6 +160,7 @@ enum DistractionType {
   FRIENDS
   UNEXPECTED_WORK
   TIRED
+  PROCRASTINATION
   OTHER
 }
 

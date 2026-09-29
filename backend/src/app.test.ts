@@ -8,8 +8,10 @@ let testUserId = ''
 
 before(async () => {
   const email = `test-${crypto.randomUUID()}@timelens.local`
-  const response = await agent.post('/api/auth/register').send({ email, password: 'password-123' })
+  const response = await agent.post('/api/auth/register').send({ email, password: 'password-123', displayName: 'Test User' })
   assert.equal(response.status, 200)
+  // The production cookie is Secure; explicitly retain it for Supertest's HTTP-only in-memory server.
+  agent.set('Cookie', response.headers['set-cookie'])
   testUserId = (await prisma.user.findUniqueOrThrow({ where: { email } })).id
 })
 
@@ -55,9 +57,9 @@ test('dashboard endpoint returns real summaries with cautious empty-data guidanc
   try {
     const response = await agent.get(`/api/analytics/dashboard?date=${date}`)
     assert.equal(response.status, 200)
-    assert.equal(response.body.cards.length, 6)
-    assert.deepEqual(response.body.cards.map((card: { name: string }) => card.name), ['Work', 'Study', 'Sleep', 'House', 'Fun', 'Other'])
-    assert.equal(response.body.studyBreakdown.length, 6)
+    assert.equal(response.body.cards.length, 8)
+    assert.deepEqual(response.body.cards.map((card: { name: string }) => card.name), ['Work', 'Study', 'Sleep', 'House', 'Health', 'Personal', 'Fun', 'Other'])
+    assert.equal(response.body.studyBreakdown.length, 0)
     assert.match(response.body.insight, /Not enough data yet/)
     assert.deepEqual(response.body.challenge, { completedDays: 0, targetDays: 100, percentage: 0 })
   } finally {
@@ -69,7 +71,7 @@ test('period analytics endpoint returns comparison and pattern structures', asyn
   const response = await agent.get('/api/analytics/7')
   assert.equal(response.status, 200)
   assert.equal(response.body.days, 7)
-  assert.equal(response.body.categories.length, 6)
+  assert.equal(response.body.categories.length, 8)
   assert.equal(response.body.hourly.length, 24)
   assert.deepEqual(Object.keys(response.body.planned), ['total', 'completed', 'diverted', 'completionPercentage'])
 })

@@ -1,4 +1,4 @@
-import { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { apiFetch, localDateInput } from './lib/api'
 import { NavLink, Route, Routes } from 'react-router-dom'
 import Dashboard from './Dashboard'
@@ -11,7 +11,7 @@ import Experiments from './Experiments'
 import Auth from './Auth'
 
 type Category = { id: string; name: string }
-type Distraction = 'NONE' | 'PHONE' | 'YOUTUBE' | 'FRIENDS' | 'UNEXPECTED_WORK' | 'TIRED' | 'OTHER'
+type Distraction = 'NONE' | 'PHONE' | 'YOUTUBE' | 'FRIENDS' | 'UNEXPECTED_WORK' | 'TIRED' | 'PROCRASTINATION' | 'OTHER'
 type HourlyBlock = {
   hourIndex: number
   category: { name: string } | null
@@ -25,7 +25,7 @@ type DailyLog = { date: string; blocks: HourlyBlock[] }
 
 const distractions: Array<[Distraction, string]> = [
   ['NONE', 'None'], ['PHONE', 'Phone'], ['YOUTUBE', 'YouTube'], ['FRIENDS', 'Friends'],
-  ['UNEXPECTED_WORK', 'Unexpected work'], ['TIRED', 'Tired'], ['OTHER', 'Other'],
+  ['UNEXPECTED_WORK', 'Unexpected work'], ['TIRED', 'Tired'], ['PROCRASTINATION', 'Procrastination'], ['OTHER', 'Other'],
 ]
 
 function addDays(date: string, days: number) {
@@ -64,6 +64,7 @@ function DailyLogPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [savingHour, setSavingHour] = useState<number | null>(null)
   const [message, setMessage] = useState('')
+  const saveTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
 
   const loadDay = useCallback(async (selectedDate: string) => {
     setMessage('')
@@ -81,6 +82,7 @@ function DailyLogPage() {
   }, [])
 
   useEffect(() => { void loadDay(date) }, [date, loadDay])
+  useEffect(() => () => Object.values(saveTimers.current).forEach(clearTimeout), [])
 
   function updateDraft(hourIndex: number, values: Partial<HourlyBlock>) {
     setLog((current) => current && {
@@ -89,7 +91,7 @@ function DailyLogPage() {
     })
   }
 
-  async function saveBlock(block: HourlyBlock) {
+  async function saveBlock(block: HourlyBlock, quietly = false) {
     setSavingHour(block.hourIndex)
     setMessage('')
     try {
@@ -107,7 +109,7 @@ function DailyLogPage() {
       if (!response.ok) throw new Error('Could not save the block.')
       const updated = await response.json() as HourlyBlock
       updateDraft(block.hourIndex, updated)
-      setMessage(`${hourLabel(block.hourIndex)} saved.`)
+      if (!quietly) setMessage(`${hourLabel(block.hourIndex)} saved.`)
     } catch {
       setMessage('Unable to save this block. Please try again.')
     } finally {
@@ -115,11 +117,18 @@ function DailyLogPage() {
     }
   }
 
+  function updateAndSave(block: HourlyBlock, values: Partial<HourlyBlock>) {
+    const next = { ...block, ...values }
+    updateDraft(block.hourIndex, values)
+    clearTimeout(saveTimers.current[block.hourIndex])
+    saveTimers.current[block.hourIndex] = setTimeout(() => void saveBlock(next, true), 550)
+  }
+
   return (
     <main className="app-shell">
       <header className="masthead">
         <div><p className="eyebrow">TIME LENS</p><h1>Daily log</h1></div>
-        <p className="quiet">Fill in what happened, one hour at a time.</p>
+        <p className="quiet">Changes save automatically while you write.</p>
       </header>
 
       <section className="date-bar" aria-label="Choose a day">
@@ -132,15 +141,14 @@ function DailyLogPage() {
       {message && <p className="notice" role="status">{message}</p>}
       <section className="table-frame" aria-label="24 hour daily log">
         <table>
-          <thead><tr><th>Time</th><th>Category</th><th>Activity</th><th>Planned task</th><th>Distraction</th><th><span className="sr-only">Save</span></th></tr></thead>
+          <thead><tr><th>Time</th><th>Category</th><th>Activity</th><th>Planned task</th><th>Distraction</th></tr></thead>
           <tbody>
             {log?.blocks.map((block) => <tr key={block.hourIndex}>
               <th scope="row">{hourLabel(block.hourIndex)}</th>
-              <td><select aria-label={`${hourLabel(block.hourIndex)} category`} value={block.categoryId ?? ''} onChange={(event) => updateDraft(block.hourIndex, { categoryId: event.target.value || null, category: categories.find((item) => item.id === event.target.value) ? { name: categories.find((item) => item.id === event.target.value)!.name } : null })}><option value="">—</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></td>
-              <td><input aria-label={`${hourLabel(block.hourIndex)} activity`} value={block.activity ?? ''} placeholder="What did you do?" onChange={(event) => updateDraft(block.hourIndex, { activity: event.target.value })} /></td>
-              <td><input aria-label={`${hourLabel(block.hourIndex)} planned task`} value={block.plannedTask ?? ''} placeholder="Optional" onChange={(event) => updateDraft(block.hourIndex, { plannedTask: event.target.value })} /></td>
-              <td><select aria-label={`${hourLabel(block.hourIndex)} distraction`} value={block.distraction} onChange={(event) => updateDraft(block.hourIndex, { distraction: event.target.value as Distraction })}>{distractions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td>
-              <td><button className="save-button" disabled={savingHour === block.hourIndex} onClick={() => void saveBlock(block)}>{savingHour === block.hourIndex ? 'Saving' : 'Save'}</button></td>
+              <td><select aria-label={`${hourLabel(block.hourIndex)} category`} value={block.categoryId ?? ''} onChange={(event) => { const category = categories.find((item) => item.id === event.target.value); updateAndSave(block, { categoryId: event.target.value || null, category: category ? { name: category.name } : null }) }}><option value="">—</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></td>
+              <td><input aria-label={`${hourLabel(block.hourIndex)} activity`} value={block.activity ?? ''} placeholder="What did you do?" onChange={(event) => updateAndSave(block, { activity: event.target.value })} /></td>
+              <td><input aria-label={`${hourLabel(block.hourIndex)} planned task`} value={block.plannedTask ?? ''} placeholder="Optional" onChange={(event) => updateAndSave(block, { plannedTask: event.target.value })} /></td>
+              <td><select aria-label={`${hourLabel(block.hourIndex)} distraction`} value={block.distraction} onChange={(event) => updateAndSave(block, { distraction: event.target.value as Distraction })}>{distractions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td>
             </tr>)}
           </tbody>
         </table>
