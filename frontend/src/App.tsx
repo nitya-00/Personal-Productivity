@@ -62,9 +62,11 @@ function DailyLogPage() {
   const [date, setDate] = useState(localDateInput())
   const [log, setLog] = useState<DailyLog | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
-  const [savingHour, setSavingHour] = useState<number | null>(null)
   const [message, setMessage] = useState('')
-  const saveTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
+  const logRef = useRef<DailyLog | null>(null)
+  const dateRef = useRef(date)
+  const saving = useRef(new Set<number>())
+  const versions = useRef<Record<number, number>>({})
 
   const loadDay = useCallback(async (selectedDate: string) => {
     setMessage('')
@@ -74,28 +76,34 @@ function DailyLogPage() {
         apiFetch('/api/categories'),
       ])
       if (!logResponse.ok || !categoryResponse.ok) throw new Error('Could not load the daily log.')
-      setLog(await logResponse.json() as DailyLog)
+      const loaded = await logResponse.json() as DailyLog
+      logRef.current = loaded
+      setLog(loaded)
       setCategories((await categoryResponse.json() as { categories: Category[] }).categories)
     } catch {
       setMessage('Unable to load this day. Please refresh and try again.')
     }
   }, [])
 
-  useEffect(() => { void loadDay(date) }, [date, loadDay])
-  useEffect(() => () => Object.values(saveTimers.current).forEach(clearTimeout), [])
+  useEffect(() => { dateRef.current = date; void loadDay(date) }, [date, loadDay])
 
   function updateDraft(hourIndex: number, values: Partial<HourlyBlock>) {
-    setLog((current) => current && {
+    const current = logRef.current
+    if (!current) return
+    const next = {
       ...current,
       blocks: current.blocks.map((block) => block.hourIndex === hourIndex ? { ...block, ...values } : block),
-    })
+    }
+    logRef.current = next
+    setLog(next)
   }
 
-  async function saveBlock(block: HourlyBlock, quietly = false) {
-    setSavingHour(block.hourIndex)
+  async function persistBlock(hourIndex: number) {
+    const block = logRef.current?.blocks.find((item) => item.hourIndex === hourIndex)
+    if (!block) return
     setMessage('')
     try {
-      const response = await apiFetch(`/api/daily-log/${date}/blocks/${block.hourIndex}`, {
+      const response = await apiFetch(`/api/daily-log/${dateRef.current}/blocks/${block.hourIndex}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -107,21 +115,28 @@ function DailyLogPage() {
         }),
       })
       if (!response.ok) throw new Error('Could not save the block.')
-      const updated = await response.json() as HourlyBlock
-      updateDraft(block.hourIndex, updated)
-      if (!quietly) setMessage(`${hourLabel(block.hourIndex)} saved.`)
+      await response.json()
     } catch {
       setMessage('Unable to save this block. Please try again.')
-    } finally {
-      setSavingHour(null)
     }
   }
 
-  function updateAndSave(block: HourlyBlock, values: Partial<HourlyBlock>) {
-    const next = { ...block, ...values }
-    updateDraft(block.hourIndex, values)
-    clearTimeout(saveTimers.current[block.hourIndex])
-    saveTimers.current[block.hourIndex] = setTimeout(() => void saveBlock(next, true), 550)
+  async function saveLatest(hourIndex: number) {
+    if (saving.current.has(hourIndex)) return
+    saving.current.add(hourIndex)
+    try {
+      let savedVersion: number
+      do {
+        savedVersion = versions.current[hourIndex] ?? 0
+        await persistBlock(hourIndex)
+      } while ((versions.current[hourIndex] ?? 0) !== savedVersion)
+    } finally { saving.current.delete(hourIndex) }
+  }
+
+  function updateAndSave(hourIndex: number, values: Partial<HourlyBlock>) {
+    updateDraft(hourIndex, values)
+    versions.current[hourIndex] = (versions.current[hourIndex] ?? 0) + 1
+    void saveLatest(hourIndex)
   }
 
   return (
@@ -145,10 +160,10 @@ function DailyLogPage() {
           <tbody>
             {log?.blocks.map((block) => <tr key={block.hourIndex}>
               <th scope="row">{hourLabel(block.hourIndex)}</th>
-              <td><select aria-label={`${hourLabel(block.hourIndex)} category`} value={block.categoryId ?? ''} onChange={(event) => { const category = categories.find((item) => item.id === event.target.value); updateAndSave(block, { categoryId: event.target.value || null, category: category ? { name: category.name } : null }) }}><option value="">—</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></td>
-              <td><input aria-label={`${hourLabel(block.hourIndex)} activity`} value={block.activity ?? ''} placeholder="What did you do?" onChange={(event) => updateAndSave(block, { activity: event.target.value })} /></td>
-              <td><input aria-label={`${hourLabel(block.hourIndex)} planned task`} value={block.plannedTask ?? ''} placeholder="Optional" onChange={(event) => updateAndSave(block, { plannedTask: event.target.value })} /></td>
-              <td><select aria-label={`${hourLabel(block.hourIndex)} distraction`} value={block.distraction} onChange={(event) => updateAndSave(block, { distraction: event.target.value as Distraction })}>{distractions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td>
+              <td><select aria-label={`${hourLabel(block.hourIndex)} category`} value={block.categoryId ?? ''} onChange={(event) => { const category = categories.find((item) => item.id === event.target.value); updateAndSave(block.hourIndex, { categoryId: event.target.value || null, category: category ? { name: category.name } : null }) }}><option value="">—</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></td>
+              <td><input aria-label={`${hourLabel(block.hourIndex)} activity`} value={block.activity ?? ''} placeholder="What did you do?" onChange={(event) => updateAndSave(block.hourIndex, { activity: event.target.value })} onBlur={() => void saveLatest(block.hourIndex)} /></td>
+              <td><input aria-label={`${hourLabel(block.hourIndex)} planned task`} value={block.plannedTask ?? ''} placeholder="Optional" onChange={(event) => updateAndSave(block.hourIndex, { plannedTask: event.target.value })} onBlur={() => void saveLatest(block.hourIndex)} /></td>
+              <td><select aria-label={`${hourLabel(block.hourIndex)} distraction`} value={block.distraction} onChange={(event) => updateAndSave(block.hourIndex, { distraction: event.target.value as Distraction })}>{distractions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td>
             </tr>)}
           </tbody>
         </table>

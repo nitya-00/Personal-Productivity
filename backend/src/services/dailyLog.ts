@@ -2,7 +2,7 @@ import { DistractionType } from '../generated/prisma/client.js'
 import { prisma } from '../lib/prisma.js'
 
 const HOUR_BLOCK_COUNT = 24
-const PRIVATE_SCHEDULE_EMAIL = '1to2one@gmail.com'
+const PRIVATE_SCHEDULE_EMAIL = 'nitya.upadhyay1221@gmail.com'
 const SCHEDULE_START = '2026-09-29'
 const SCHEDULE_END = '2026-10-13'
 
@@ -43,13 +43,11 @@ export async function getOrCreateDailyLog(userId: string, date: Date) {
   const dateKey = dateOnly(date).toISOString().slice(0, 10)
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } })
   if (user?.email?.toLowerCase() === PRIVATE_SCHEDULE_EMAIL && dateKey >= SCHEDULE_START && dateKey <= SCHEDULE_END) {
-    const categories = await prisma.category.findMany({ where: { name: { in: [...new Set(privateSchedule.map((item) => item.category))] } } })
     await prisma.$transaction(privateSchedule.map((item, hourIndex) => prisma.hourlyBlock.updateMany({
       where: { dailyLogId: log.id, hourIndex, plannedTask: null },
       data: { plannedTask: item.task },
     })))
     // Categories are intentionally not prefilled: they describe what actually happened, not the plan.
-    void categories
   }
 
   return prisma.dailyLog.findUniqueOrThrow({
