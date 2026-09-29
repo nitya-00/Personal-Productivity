@@ -90,3 +90,11 @@ test('goals endpoint creates and updates a simple goal', async () => {
     goalId = undefined
   } finally { if (goalId) await prisma.goal.delete({ where: { id: goalId } }) }
 })
+
+test('challenge accepts more than one activity on the same day', async () => {
+  const first = await agent.post('/api/challenge/today').send({ description: 'Learned a new shortcut', category: 'SKILL' })
+  assert.equal(first.status, 201)
+  const second = await agent.post('/api/challenge/today').send({ description: 'Took a new running route', category: 'HEALTH' })
+  assert.equal(second.status, 201)
+  assert.equal(second.body.entries.filter((entry: { dayNumber: number }) => entry.dayNumber === second.body.dayNumber).length, 2)
+})

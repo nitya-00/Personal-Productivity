@@ -96,8 +96,8 @@ model ChallengeDay {
   createdAt   DateTime          @default(now())
   challenge   Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
 
-  @@unique([challengeId, dayNumber])
-  @@unique([challengeId, date])
+  @@index([challengeId, dayNumber])
+  @@index([challengeId, date])
 }
 
 model Reminder {
