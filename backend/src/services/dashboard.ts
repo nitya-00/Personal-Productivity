@@ -67,7 +67,9 @@ export async function getDashboard(date = new Date()) {
     : `${biggest.name} is your largest recorded category today at ${biggest.hours}h.`
   const recommendation = filledHours < 4
     ? 'Try logging the next few completed hours before reviewing the day.'
-    : 'Keep logging consistently to make tomorrow’s comparison more useful.'
+    : filledHours >= 18
+      ? 'Breakthrough: you showed up for your day. Carry that promise gently into tomorrow.'
+      : 'Nice work checking in with your day. One honest hour logged now makes tomorrow easier.'
 
   const challenge = await prisma.challenge.findFirst({
     where: { userId: profile.id }, orderBy: { startDate: 'desc' }, include: { _count: { select: { days: true } } },
@@ -75,5 +77,5 @@ export async function getDashboard(date = new Date()) {
   const completedDays = challenge?._count.days ?? 0
   const targetDays = challenge?.targetDays ?? 100
 
-  return { date: selectedDay.toISOString().slice(0, 10), cards, studyBreakdown, weekly, insight, recommendation, challenge: { completedDays, targetDays, percentage: Number(((completedDays / targetDays) * 100).toFixed(0)) } }
+  return { date: selectedDay.toISOString().slice(0, 10), cards, studyBreakdown, weekly, insight, recommendation, celebration: filledHours >= 18 ? 'Wow — you did it. See you tomorrow.' : null, challenge: { completedDays, targetDays, percentage: Number(((completedDays / targetDays) * 100).toFixed(0)) } }
 }
