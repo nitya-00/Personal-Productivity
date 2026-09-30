@@ -21,9 +21,11 @@ app.use(express.json())
 app.use(sessionContext)
 
 app.get('/api/health', (_request, response) => {
-  response.json({ status: 'ok' })
+  response.json({
+    status: 'ok',
+    frontendOrigin: process.env.FRONTEND_ORIGIN
+  })
 })
-
 app.use('/api', authRouter)
 app.use('/api', dailyLogRouter)
 app.use('/api', analyticsRouter)
