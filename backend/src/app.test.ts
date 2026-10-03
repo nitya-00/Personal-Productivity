@@ -24,7 +24,8 @@ test('GET /api/health returns ok', async () => {
   const response = await request(app).get('/api/health')
 
   assert.equal(response.status, 200)
-  assert.deepEqual(response.body, { status: 'ok' })
+  assert.equal(response.body.status, 'ok')
+  assert.equal(response.body.frontendOrigin, process.env.FRONTEND_ORIGIN)
 })
 
 test('daily-log endpoint returns 24 blocks and updates one selected block', async () => {

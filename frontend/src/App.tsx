@@ -6,7 +6,6 @@ import Analytics from './Analytics'
 import Goals from './Goals'
 import Challenge from './Challenge'
 import Checkins from './Checkins'
-import PhoneFree from './PhoneFree'
 import Experiments from './Experiments'
 import Auth from './Auth'
 
@@ -173,5 +172,5 @@ function DailyLogPage() {
 }
 
 export default function App() {
-  return <><nav className="main-nav" aria-label="Main navigation"><div className="nav-links"><NavLink to="/">Daily log</NavLink><NavLink to="/dashboard">Dashboard</NavLink><NavLink to="/analytics">Analytics</NavLink><NavLink to="/goals">Goals</NavLink><NavLink to="/challenge">100 Days</NavLink><NavLink to="/checkins">Check-ins</NavLink><NavLink to="/phone-free">Phone-free</NavLink><NavLink to="/experiments">Experiments</NavLink></div><div className="nav-profile"><ProfilePhoto /><NavLink to="/auth">Sign in</NavLink></div></nav><Routes><Route path="/" element={<DailyLogPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/analytics" element={<Analytics />} /><Route path="/goals" element={<Goals />} /><Route path="/challenge" element={<Challenge />} /><Route path="/checkins" element={<Checkins />} /><Route path="/phone-free" element={<PhoneFree />} /><Route path="/experiments" element={<Experiments />} /><Route path="/auth" element={<Auth />} /></Routes></>
+  return <><nav className="main-nav" aria-label="Main navigation"><div className="nav-links"><NavLink to="/">Daily log</NavLink><NavLink to="/dashboard">Dashboard</NavLink><NavLink to="/analytics">Analytics</NavLink><NavLink to="/goals">Goals</NavLink><NavLink to="/challenge">100 Days</NavLink><NavLink to="/checkins">Check-ins</NavLink><NavLink to="/experiments">Experiments</NavLink></div><div className="nav-profile"><ProfilePhoto /><NavLink to="/auth">Sign in</NavLink></div></nav><Routes><Route path="/" element={<DailyLogPage />} /><Route path="/dashboard" element={<Dashboard />} /><Route path="/analytics" element={<Analytics />} /><Route path="/goals" element={<Goals />} /><Route path="/challenge" element={<Challenge />} /><Route path="/checkins" element={<Checkins />} /><Route path="/experiments" element={<Experiments />} /><Route path="/auth" element={<Auth />} /></Routes></>
 }

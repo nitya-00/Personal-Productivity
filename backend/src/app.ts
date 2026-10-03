@@ -7,7 +7,6 @@ import goalsRouter from './routes/goals.js'
 import challengeRouter from './routes/challenge.js'
 import checkinsRouter from './routes/checkins.js'
 import remindersRouter from './routes/reminders.js'
-import phoneFreeRouter from './routes/phoneFree.js'
 import insightsRouter from './routes/insights.js'
 import experimentsRouter from './routes/experiments.js'
 import authRouter from './routes/auth.js'
@@ -33,7 +32,6 @@ app.use('/api', goalsRouter)
 app.use('/api', challengeRouter)
 app.use('/api', checkinsRouter)
 app.use('/api', remindersRouter)
-app.use('/api', phoneFreeRouter)
 app.use('/api', insightsRouter)
 app.use('/api', experimentsRouter)
 

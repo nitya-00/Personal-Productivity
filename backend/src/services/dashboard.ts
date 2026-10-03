@@ -72,9 +72,9 @@ export async function getDashboard(date = new Date()) {
       : 'Nice work checking in with your day. One honest hour logged now makes tomorrow easier.'
 
   const challenge = await prisma.challenge.findFirst({
-    where: { userId: profile.id }, orderBy: { startDate: 'desc' }, include: { _count: { select: { days: true } } },
+    where: { userId: profile.id }, orderBy: { startDate: 'desc' }, select: { targetDays: true, days: { select: { date: true } } },
   })
-  const completedDays = challenge?._count.days ?? 0
+  const completedDays = new Set(challenge?.days.map((day) => day.date.toISOString().slice(0, 10)) ?? []).size
   const targetDays = challenge?.targetDays ?? 100
 
   return { date: selectedDay.toISOString().slice(0, 10), cards, studyBreakdown, weekly, insight, recommendation, celebration: filledHours >= 18 ? 'Wow — you did it. See you tomorrow.' : null, challenge: { completedDays, targetDays, percentage: Number(((completedDays / targetDays) * 100).toFixed(0)) } }
